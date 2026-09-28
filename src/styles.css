@@ -32,8 +32,8 @@
   --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --page: 1240px;
-  --gutter: clamp(16px, 4vw, 40px);
+  --page: 1560px;
+  --gutter: clamp(20px, 4vw, 64px);
 
   color-scheme: light;
 }
@@ -263,13 +263,13 @@ code,
 
 .hero {
   position: relative;
-  padding: clamp(40px, 7vw, 88px) 0 clamp(56px, 8vw, 96px);
+  padding: clamp(40px, 6vw, 80px) 0 clamp(16px, 3vw, 40px);
   overflow: hidden;
 }
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: clamp(32px, 5vw, 64px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(32px, 4.5vw, 80px);
   align-items: center;
 }
 .hero h1 {
@@ -289,16 +289,9 @@ code,
   gap: 12px;
   margin-top: 34px;
 }
-.hero-shot {
-  /* Bleeds past the right edge on wide screens, like a window left open on the desk. */
-  margin-right: calc(-1 * max(var(--gutter), (100vw - var(--page)) / 2 + var(--gutter)));
-}
 @media (max-width: 900px) {
   .hero-grid {
     grid-template-columns: 1fr;
-  }
-  .hero-shot {
-    margin-right: 0;
   }
 }
 
@@ -340,9 +333,6 @@ code,
   align-items: center;
   margin-top: 56px;
 }
-.sessions-shot {
-  margin-left: calc(-1 * max(0px, (100vw - var(--page)) / 2));
-}
 .facts {
   display: grid;
   gap: 28px;
@@ -370,9 +360,6 @@ code,
 @media (max-width: 900px) {
   .sessions-grid {
     grid-template-columns: 1fr;
-  }
-  .sessions-shot {
-    margin-left: 0;
   }
 }
 

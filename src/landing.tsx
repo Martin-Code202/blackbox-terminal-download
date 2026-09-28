@@ -79,7 +79,7 @@ function Hero({ visitor, release }: { visitor: Visitor; release: ReleaseState })
         </div>
         <div className="hero-shot hero-enter" style={{ '--delay': '240ms' } as React.CSSProperties}>
           <div className="shot">
-            <Shot name="vaults" small eager width={2000} height={1250} sizes="(max-width: 900px) 100vw, 60vw" alt="Blackbox showing saved hosts grouped into Home, Production and Staging, with a search bar to connect." />
+            <Shot name="vaults" small eager width={2000} height={1250} sizes="(max-width: 900px) 100vw, 50vw" alt="Blackbox showing saved hosts grouped into Home, Production and Staging, with a search bar to connect." />
           </div>
         </div>
       </div>
