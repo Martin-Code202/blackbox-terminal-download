@@ -63,7 +63,10 @@ export async function detect(): Promise<Visitor> {
     // no hints; keep the guess
   }
   // Safari and Firefox on a Mac don't say; nearly every Mac sold since 2021 is Apple silicon.
-  const id = os === 'mac' ? (uaData && !arm ? 'mac-x64' : 'mac-arm64') : os === 'windows' ? (arm ? 'win-arm64' : 'win-x64') : arm ? 'appimage-arm64' : 'appimage-x64'
+  // A package installs into the app menu and dock like any other app; the AppImage is the fallback
+  // when the browser doesn't name the distribution (Firefox on Ubuntu and Fedora does).
+  const linux = /Ubuntu|Debian|Mint|Pop!_OS/i.test(ua) ? 'deb' : /Fedora|Red Hat|openSUSE|SUSE/i.test(ua) ? 'rpm' : 'appimage'
+  const id = os === 'mac' ? (uaData && !arm ? 'mac-x64' : 'mac-arm64') : os === 'windows' ? (arm ? 'win-arm64' : 'win-x64') : `${linux}-${arm ? 'arm64' : 'x64'}`
   return { os, best: BUILDS.find((b) => b.id === id) }
 }
 

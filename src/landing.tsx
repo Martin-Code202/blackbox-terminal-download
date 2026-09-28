@@ -220,19 +220,22 @@ const FIRST_RUN: Record<Os, { summary: string; body: React.ReactNode }> = {
       <>
         <p>This build isn't notarised by Apple yet, so macOS blocks the first launch. Open System Settings, then Privacy & Security, and choose Open Anyway. Or, after dragging it to Applications:</p>
         <code>xattr -dr com.apple.quarantine /Applications/Blackbox.app</code>
+        <p>Blackbox tells you when a new version is out.</p>
       </>
     )
   },
   windows: {
     summary: 'Opening it the first time',
-    body: <p>This build isn't code-signed yet, so Windows SmartScreen may warn you. Choose More info, then Run anyway.</p>
+    body: <p>This build isn't code-signed yet, so Windows SmartScreen may warn you. Choose More info, then Run anyway. You only do this once: Blackbox updates itself after that.</p>
   },
   linux: {
     summary: 'Installing',
     body: (
       <>
-        <p>Make the AppImage executable and run it (it needs FUSE 2, which Ubuntu calls libfuse2t64), or install the package:</p>
-        <code>{'chmod +x Blackbox-linux-x86_64.AppImage\nsudo apt install ./Blackbox-linux-amd64.deb\nsudo dnf install ./Blackbox-linux-x86_64.rpm'}</code>
+        <p>Install the package for your distribution. Blackbox then appears in your app search and can be pinned to the dock, and it updates itself (asking for your password to install each update):</p>
+        <code>{'sudo apt install ./Blackbox-linux-amd64.deb\nsudo dnf install ./Blackbox-linux-x86_64.rpm'}</code>
+        <p>Or make the AppImage executable and run it (it needs FUSE 2, which Ubuntu calls libfuse2t64). On first launch it adds itself to your app menu, and it updates in place:</p>
+        <code>chmod +x Blackbox-linux-x86_64.AppImage</code>
       </>
     )
   }
