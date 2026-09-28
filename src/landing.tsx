@@ -218,7 +218,7 @@ const FIRST_RUN: Record<Os, { summary: string; body: React.ReactNode }> = {
     summary: 'Opening it the first time',
     body: (
       <>
-        <p>This build isn't notarised by Apple yet, so macOS blocks the first launch. Open System Settings, then Privacy & Security, and choose Open Anyway. Or, after dragging it to Applications:</p>
+        <p>Open the .zip and drag Blackbox to Applications. This build isn't notarised by Apple yet, so macOS blocks the first launch. Open System Settings, then Privacy & Security, and choose Open Anyway. Or run:</p>
         <code>xattr -dr com.apple.quarantine /Applications/Blackbox.app</code>
         <p>Blackbox tells you when a new version is out.</p>
       </>

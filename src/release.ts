@@ -21,8 +21,8 @@ export interface Build {
 }
 
 export const BUILDS: Build[] = [
-  { id: 'mac-arm64', os: 'mac', label: 'Apple silicon', detail: 'M1 and later, .dmg', file: 'Blackbox-mac-arm64.dmg' },
-  { id: 'mac-x64', os: 'mac', label: 'Intel', detail: 'Older Macs, .dmg', file: 'Blackbox-mac-x64.dmg' },
+  { id: 'mac-arm64', os: 'mac', label: 'Apple silicon', detail: 'M1 and later, .zip', file: 'Blackbox-mac-arm64.zip' },
+  { id: 'mac-x64', os: 'mac', label: 'Intel', detail: 'Older Macs, .zip', file: 'Blackbox-mac-x64.zip' },
   { id: 'win-x64', os: 'windows', label: 'Windows x64', detail: 'Installer, .exe', file: 'Blackbox-windows-x64-setup.exe' },
   { id: 'win-arm64', os: 'windows', label: 'Windows on Arm', detail: 'Installer, .exe', file: 'Blackbox-windows-arm64-setup.exe' },
   { id: 'appimage-x64', os: 'linux', label: 'AppImage', detail: 'x86_64, any distribution', file: 'Blackbox-linux-x86_64.AppImage' },
