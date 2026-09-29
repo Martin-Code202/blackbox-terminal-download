@@ -51,8 +51,9 @@ jobs:
           if [ -n "$INPUT_TAG" ]; then
             tag=$INPUT_TAG
           else
-            tag=$(git ls-remote --tags --sort=-v:refname "https://x-access-token:$SOURCE_TOKEN@github.com/$SOURCE.git" 'v*' \
-              | grep -v '\^{}$' | head -1 | sed 's|.*refs/tags/||')
+            # On its own line so a bad token fails the job instead of looking like "no tags".
+            tags=$(git ls-remote --tags --sort=-v:refname "https://x-access-token:$SOURCE_TOKEN@github.com/$SOURCE.git" 'v*')
+            tag=$(echo "$tags" | grep -v '\^{}$' | head -1 | sed 's|.*refs/tags/||')
             if [ -z "$tag" ]; then echo "No v* tags in the source repo"; exit 0; fi
             # Drafts count too, so a failed build isn't retried every hour; rerun it by hand.
             if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
