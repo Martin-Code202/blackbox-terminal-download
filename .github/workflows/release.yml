@@ -1,0 +1,138 @@
+# Builds Blackbox for every platform and publishes the installers as a release of this repo, which
+# the website links to. It runs here rather than in the private source repo because Actions minutes
+# are free for public repos.
+#
+# Every hour it looks for a v* tag in the source repo that has no release here yet and builds it;
+# "Run workflow" builds a given tag on demand (e.g. to retry a failed build).
+#
+# Needs one secret, SOURCE_TOKEN: a fine-grained personal access token with "Contents: read" on
+# Martin-Code202/blackbox-terminal only. It is used just to check the source out and read its
+# tags; publishing uses this repo's own GITHUB_TOKEN.
+#
+# Nothing is properly code-signed yet. macOS builds are ad-hoc signed (mac.identity=- below),
+# which Apple silicon needs to launch them at all. Real signing turns on later by adding secrets
+# (CSC_LINK / CSC_KEY_PASSWORD, and APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID for
+# notarising) and dropping that flag; electron-builder picks the secrets up by name.
+name: Release
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Source tag to build, e.g. v0.3.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  SOURCE: Martin-Code202/blackbox-terminal
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - id: tag
+        name: Pick the tag to build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_TOKEN: ${{ secrets.SOURCE_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            tag=$INPUT_TAG
+          else
+            tag=$(git ls-remote --tags --sort=-v:refname "https://x-access-token:$SOURCE_TOKEN@github.com/$SOURCE.git" 'v*' \
+              | grep -v '\^{}$' | head -1 | sed 's|.*refs/tags/||')
+            if [ -z "$tag" ]; then echo "No v* tags in the source repo"; exit 0; fi
+            # Drafts count too, so a failed build isn't retried every hour; rerun it by hand.
+            if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "$tag is already released"; exit 0
+            fi
+          fi
+          echo "Building $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - if: steps.tag.outputs.tag
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE }}
+          ref: ${{ steps.tag.outputs.tag }}
+          token: ${{ secrets.SOURCE_TOKEN }}
+          persist-credentials: false
+      - id: v
+        if: steps.tag.outputs.tag
+        name: Tag matches package.json
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag $TAG does not match package.json version $version"
+            exit 1
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.tag
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x64, os: ubuntu-24.04, args: --linux --x64 }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, args: --linux --arm64 }
+          - { name: mac, os: macos-15, args: --mac --arm64 --x64 -c.mac.identity=- }
+          - { name: windows, os: windows-2025, args: --win --x64 --arm64 }
+    name: build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE }}
+          ref: ${{ needs.check.outputs.tag }}
+          token: ${{ secrets.SOURCE_TOKEN }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Linux packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
+      - name: FPM for arm64 (electron-builder only bundles an x64 one)
+        if: matrix.name == 'linux-arm64'
+        run: sudo apt-get install -y ruby ruby-dev build-essential && sudo gem install fpm --no-document
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Package and upload
+        run: npx electron-builder ${{ matrix.args }} --publish always
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          USE_SYSTEM_FPM: ${{ matrix.name == 'linux-arm64' && 'true' || '' }}
+
+  publish:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ needs.check.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --draft=false --latest
